@@ -1,0 +1,81 @@
+---
+- hosts: all
+  become: true
+  vars:
+    mysql_root_password: "12345"
+    http_host: "ec2-16-170-242-114.eu-north-1.compute.amazonaws.com"
+    http_conf: "ec2-16-170-242-114.eu-north-1.compute.amazonaws.com"
+    http_port: "80"
+    source_file: files/nginx.conf.j2
+    destin_file: /etc/nginx/sites-available/{{ http_conf }}
+
+    source_file1: files/info.php.j2
+    destin_file1: /var/www/html/info.php
+
+    source_file2: files/index.php.j2
+    destin_file2: /var/www/html/index.php
+
+  tasks:
+
+
+    - name: Install LEMP Packages
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'nginx', 'mysql-server', 'python3-pymysql', 'php-fpm', 'php-mysql' ]
+    
+# Nginx Configuration
+    - name: Sets Nginx conf file
+      template:
+        src: '{{ source_file }}'
+        dest: '{{ destin_file }}'
+
+    - name: Enables new site
+      file:
+        src: "/etc/nginx/sites-available/{{ http_conf }}"
+        dest: "/etc/nginx/sites-enabled/{{ http_conf }}"
+        state: link
+      notify: Reload Nginx
+    
+    - name: Removes "default" site
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+      notify: Reload Nginx
+
+     #MySQL Configuration
+    - name: Sets the root password 
+      mysql_user: 
+        name: root 
+        password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+
+
+# HP Info Page
+    - name: PHP Info Page
+      template:
+        src: '{{ source_file1 }}'
+        dest: '{{ destin_file1 }}'
+
+    - name: index.php
+      template:
+        src: '{{ source_file2 }}'
+        dest: '{{ destin_file2 }}'
+
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+
+
+
+
+#sudo apt-get install phpmyadmin
+#sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
+

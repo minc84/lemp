@@ -1,0 +1,2 @@
+[ansible_lemp]
+ansible_lemp ansible_host=13.53.217.163 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/kuber/slave_jenkins/jenkins-key-slave.pem
