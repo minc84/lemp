@@ -50,7 +50,7 @@
 
 
 
-# HP Info Page
+# PHP Info Page
     - name: PHP Info Page
       template:
         src: '{{ source_file1 }}'
